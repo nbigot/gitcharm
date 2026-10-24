@@ -1,0 +1,30 @@
+{
+  "branches": ["main"],
+  "tagFormat": "v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md",
+        "changelogTitle": "# Changelog\n\nAll notable changes to GitCharm are documented in this file. It is generated\nby [semantic-release](https://github.com/semantic-release/semantic-release)\nfrom the commit messages, and the project follows\n[Semantic Versioning](https://semver.org/)."
+      }
+    ],
+    ["@semantic-release/npm", { "npmPublish": false }],
+    ["@semantic-release/exec", { "prepareCmd": "npm run package" }],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [{ "path": "gitcharm.vsix", "name": "gitcharm-${nextRelease.version}.vsix", "label": "GitCharm ${nextRelease.version} (.vsix)" }]
+      }
+    ]
+  ]
+}

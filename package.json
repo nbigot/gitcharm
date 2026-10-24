@@ -1,0 +1,304 @@
+{
+  "name": "gitcharm",
+  "displayName": "GitCharm",
+  "description": "A PyCharm-style Git experience for VS Code: log with commit graph, branches tree, commit details, a checkbox-based Commit view and a branches popup.",
+  "version": "1.0.0",
+  "publisher": "local",
+  "license": "MIT",
+  "author": "Nicolas Bigot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nbigot/gitcharm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nbigot/gitcharm/issues"
+  },
+  "homepage": "https://github.com/nbigot/gitcharm#readme",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Visualization"
+  ],
+  "keywords": [
+    "git",
+    "log",
+    "graph",
+    "branches",
+    "pycharm"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:.git"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "GitCharm runs Git, which can execute commands configured by the repository itself."
+    }
+  },
+  "contributes": {
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "gitcharm-panel",
+          "title": "Git",
+          "icon": "media/gitcharm.svg"
+        },
+        {
+          "id": "gitcharm-commit",
+          "title": "Commit",
+          "icon": "media/commit.svg"
+        }
+      ]
+    },
+    "views": {
+      "gitcharm-panel": [
+        {
+          "type": "webview",
+          "id": "gitcharm.log",
+          "name": "Log"
+        }
+      ],
+      "gitcharm-commit": [
+        {
+          "type": "webview",
+          "id": "gitcharm.commit",
+          "name": "Commit"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gitcharm.showLog",
+        "title": "Show Git Log",
+        "category": "GitCharm",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "gitcharm.showBranches",
+        "title": "Branches...",
+        "category": "GitCharm",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "gitcharm.showCommit",
+        "title": "Commit...",
+        "category": "GitCharm",
+        "icon": "$(check)"
+      },
+      {
+        "command": "gitcharm.showFileHistory",
+        "title": "Show History for File",
+        "category": "GitCharm",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitcharm.updateProject",
+        "title": "Update Project...",
+        "category": "GitCharm",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "gitcharm.push",
+        "title": "Push...",
+        "category": "GitCharm",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "gitcharm.fetch",
+        "title": "Fetch",
+        "category": "GitCharm",
+        "icon": "$(repo-fetch)"
+      },
+      {
+        "command": "gitcharm.refresh",
+        "title": "Refresh",
+        "category": "GitCharm",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitcharm.annotate",
+        "title": "Annotate with Git Blame",
+        "category": "GitCharm",
+        "icon": "$(person)"
+      },
+      {
+        "command": "gitcharm.closeAnnotations",
+        "title": "Close Annotations",
+        "category": "GitCharm",
+        "icon": "$(close)"
+      },
+      {
+        "command": "gitcharm.stash",
+        "title": "Stash Changes...",
+        "category": "GitCharm",
+        "icon": "$(git-stash)"
+      },
+      {
+        "command": "gitcharm.showStashes",
+        "title": "Show Stashes",
+        "category": "GitCharm",
+        "icon": "$(git-stash)"
+      },
+      {
+        "command": "gitcharm.showCommitInLog",
+        "title": "Show Commit in Git Log",
+        "category": "GitCharm"
+      },
+      {
+        "command": "gitcharm.blameDiff",
+        "title": "Show Diff of Commit",
+        "category": "GitCharm"
+      },
+      {
+        "command": "gitcharm.copyText",
+        "title": "Copy",
+        "category": "GitCharm"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "gitcharm.showBranches",
+          "when": "view == gitcharm.log || view == gitcharm.commit && !view.gitcharm.log.visible",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitcharm.updateProject",
+          "when": "view == gitcharm.log || view == gitcharm.commit && !view.gitcharm.log.visible",
+          "group": "navigation@2"
+        },
+        {
+          "command": "gitcharm.push",
+          "when": "view == gitcharm.log || view == gitcharm.commit && !view.gitcharm.log.visible",
+          "group": "navigation@3"
+        },
+        {
+          "command": "gitcharm.refresh",
+          "when": "view == gitcharm.log || view == gitcharm.commit && !view.gitcharm.log.visible",
+          "group": "navigation@9"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "gitcharm.showFileHistory",
+          "when": "resourceScheme == file",
+          "group": "gitcharm"
+        },
+        {
+          "command": "gitcharm.annotate",
+          "when": "(resourceScheme == file || resourceScheme == gitcharm) && resource not in gitcharm.annotatedResources",
+          "group": "gitcharm"
+        },
+        {
+          "command": "gitcharm.closeAnnotations",
+          "when": "resource in gitcharm.annotatedResources",
+          "group": "gitcharm"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "gitcharm.showFileHistory",
+          "when": "resourceScheme == file",
+          "group": "gitcharm@1"
+        },
+        {
+          "command": "gitcharm.annotate",
+          "when": "(resourceScheme == file || resourceScheme == gitcharm) && resource not in gitcharm.annotatedResources",
+          "group": "gitcharm@2"
+        },
+        {
+          "command": "gitcharm.closeAnnotations",
+          "when": "resource in gitcharm.annotatedResources",
+          "group": "gitcharm@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "gitcharm.showFileHistory",
+          "group": "gitcharm@1"
+        }
+      ],
+      "editor/lineNumber/context": [
+        {
+          "command": "gitcharm.annotate",
+          "when": "(resourceScheme == file || resourceScheme == gitcharm) && resource not in gitcharm.annotatedResources",
+          "group": "gitcharm"
+        },
+        {
+          "command": "gitcharm.closeAnnotations",
+          "when": "resource in gitcharm.annotatedResources",
+          "group": "gitcharm"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitcharm.annotate",
+          "when": "editorIsOpen && resource not in gitcharm.annotatedResources"
+        },
+        {
+          "command": "gitcharm.closeAnnotations",
+          "when": "resource in gitcharm.annotatedResources"
+        },
+        {
+          "command": "gitcharm.showCommitInLog",
+          "when": "false"
+        },
+        {
+          "command": "gitcharm.blameDiff",
+          "when": "false"
+        },
+        {
+          "command": "gitcharm.copyText",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "GitCharm",
+      "properties": {
+        "gitcharm.log.pageSize": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 100,
+          "description": "Number of commits loaded at once in the Log. More are loaded when you scroll to the bottom."
+        },
+        "gitcharm.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the current branch in the status bar; clicking it opens the branches popup."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p webview",
+    "test": "vitest run --testTimeout=20000",
+    "package": "npm run typecheck && npm run build -- --production && vsce package --no-dependencies -o gitcharm.vsix",
+    "prepare": "husky",
+    "test:e2e": "node esbuild.mjs && esbuild test/e2e/suite.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist-test/suite.js --log-level=warning && node test/e2e/run.mjs"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^11.0.1",
+    "@types/node": "^22.20.5",
+    "@types/vscode": "1.95.0",
+    "@vscode/codicons": "^0.0.40",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "conventional-changelog-conventionalcommits": "^10.4.1",
+    "esbuild": "^0.28.2",
+    "husky": "^9.1.7",
+    "semantic-release": "^25.0.9",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

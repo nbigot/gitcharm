@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in GitCharm doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a repository with ...
+        2. In the Git tab, right-click ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: gitcharm-version
+    attributes:
+      label: GitCharm version
+      description: Shown in the Extensions view.
+    validations:
+      required: true
+  - type: input
+    id: vscode-version
+    attributes:
+      label: VS Code version
+      description: Help > About, or `code --version`.
+    validations:
+      required: true
+  - type: input
+    id: git-version
+    attributes:
+      label: Git version
+      description: Output of `git --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows, macOS, Linux, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: remote
+    attributes:
+      label: Window type
+      options: [Local folder, Remote-SSH, WSL, Dev Container, Other]
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Errors from Help > Toggle Developer Tools > Console, or a screenshot. Remove anything private.

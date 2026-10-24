@@ -1,0 +1,472 @@
+.log-root {
+  display: flex;
+  height: 100%;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.branches-pane,
+.details-pane {
+  flex: none;
+}
+
+.log-pane {
+  flex: 1;
+  container-type: inline-size;
+}
+
+/* Drop columns when the log gets narrow, like PyCharm does. */
+@container (max-width: 720px) {
+  .col.hash {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .col.author {
+    width: min(var(--col-author, 150px), 110px);
+  }
+
+  .col.date {
+    display: none;
+  }
+}
+
+.pane > .tree.scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- toolbar ---- */
+
+/* The filters wrap onto a second line when the log is narrow. */
+.log-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-height: 32px;
+  padding: 4px 6px;
+  overflow: hidden;
+}
+
+.log-toolbar .search-box.grow {
+  flex: 1 1 140px;
+  min-width: 120px;
+  max-width: 340px;
+}
+
+.repo-select {
+  height: 24px;
+  max-width: 160px;
+  border: 1px solid var(--vscode-dropdown-border, transparent);
+  border-radius: 2px;
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  font: inherit;
+}
+
+.filter-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  max-width: 300px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.filter-btn .value {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.filter-btn.active {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.filter-btn .codicon {
+  font-size: 14px;
+}
+
+.filter-btn .x {
+  display: inline-flex;
+  border-radius: 3px;
+  opacity: 0.75;
+}
+
+.filter-btn .x:hover {
+  background: rgba(128, 128, 128, 0.35);
+  opacity: 1;
+}
+
+/* Date filter, Select… */
+.date-picker {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.date-picker label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.date-picker input {
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 2px;
+  outline: none;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+}
+
+.date-picker input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+body.vscode-dark .date-picker input,
+body.vscode-high-contrast .date-picker input {
+  color-scheme: dark;
+}
+
+.date-picker .buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.progress {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  height: 2px;
+  margin-bottom: -2px;
+  background: linear-gradient(90deg, transparent, var(--vscode-progressBar-background), transparent) no-repeat;
+  background-size: 40% 100%;
+  animation: gc-progress 1.1s linear infinite;
+}
+
+.progress[hidden] {
+  display: none;
+}
+
+@keyframes gc-progress {
+  from {
+    background-position: -40% 0;
+  }
+  to {
+    background-position: 140% 0;
+  }
+}
+
+/* ---- commit table ---- */
+
+.log-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 24px;
+  border-bottom: 1px solid var(--gc-border);
+  color: var(--gc-dim);
+  font-size: 0.92em;
+}
+
+.col {
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.col.subject {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 120px;
+}
+
+.col.author {
+  flex: none;
+  width: var(--col-author, 150px);
+}
+
+.col.date {
+  flex: none;
+  width: var(--col-date, 136px);
+}
+
+.col.hash {
+  flex: none;
+  width: var(--col-hash, 86px);
+  color: var(--gc-dim);
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.92em;
+}
+
+.log-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  outline: none;
+}
+
+#logSpacer {
+  position: relative;
+}
+
+.log-row {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  cursor: default;
+}
+
+.log-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.log-row.selected {
+  background: var(--vscode-list-inactiveSelectionBackground);
+  color: var(--vscode-list-inactiveSelectionForeground, inherit);
+}
+
+.log-scroll:focus .log-row.selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+
+.log-scroll:focus .log-row.selected .col.hash {
+  color: inherit;
+}
+
+.log-row .col.subject {
+  padding-left: 2px;
+}
+
+.log-scroll .empty {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  left: 0;
+}
+
+.log-scroll .empty[hidden] {
+  display: none;
+}
+
+.msg {
+  flex: 1 1 auto;
+  min-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Columns hidden from the header's context menu. */
+.log-pane.hide-author .col.author,
+.log-pane.hide-date .col.date,
+.log-pane.hide-hash .col.hash {
+  display: none;
+}
+
+.log-header .col {
+  position: relative;
+}
+
+.col-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  border-left: 1px solid var(--gc-border);
+  cursor: col-resize;
+}
+
+.col-resizer:hover,
+.col-resizer.dragging {
+  border-left: 2px solid var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
+/* ---- graph ---- */
+
+.graph {
+  flex: none;
+  margin-right: 6px;
+  overflow: visible;
+}
+
+.graph line {
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.graph .node.head {
+  stroke: var(--vscode-foreground);
+  stroke-width: 1.5;
+}
+
+.graph .c0 { stroke: #4e9cf5; }
+.graph .c1 { stroke: #e5a03a; }
+.graph .c2 { stroke: #5fb85f; }
+.graph .c3 { stroke: #d662d6; }
+.graph .c4 { stroke: #3fc1c9; }
+.graph .c5 { stroke: #e35d5d; }
+.graph .c6 { stroke: #a78bfa; }
+.graph .c7 { stroke: #c7b92e; }
+.graph .f0 { fill: #4e9cf5; }
+.graph .f1 { fill: #e5a03a; }
+.graph .f2 { fill: #5fb85f; }
+.graph .f3 { fill: #d662d6; }
+.graph .f4 { fill: #3fc1c9; }
+.graph .f5 { fill: #e35d5d; }
+.graph .f6 { fill: #a78bfa; }
+.graph .f7 { fill: #c7b92e; }
+
+/* ---- ref labels ---- */
+
+.refs {
+  display: flex;
+  flex: 0 3 auto;
+  gap: 4px;
+  min-width: 0;
+  max-width: 50%;
+  margin-left: 8px;
+  overflow: hidden;
+}
+
+.ref {
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  height: 17px;
+  padding: 0 5px 0 3px;
+  border-radius: 3px;
+  background: rgba(128, 128, 128, 0.16);
+  font-size: 0.88em;
+  white-space: nowrap;
+}
+
+.ref .codicon {
+  flex: none;
+  font-size: 12px;
+}
+
+.ref-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ref-current {
+  font-weight: 600;
+}
+
+.ref-current .codicon,
+.current-icon,
+.codicon-star-full.branch-icon {
+  color: #e5a03a;
+}
+
+.ref-branch .codicon,
+.branch-icon {
+  color: #5fb85f;
+}
+
+.ref-remote .codicon,
+.remote-icon {
+  color: #a78bfa;
+}
+
+.ref-tag .codicon,
+.tag-icon {
+  color: #8fa1b3;
+}
+
+.ref-head .codicon,
+.head-icon {
+  color: #e35d5d;
+}
+
+.ref-more {
+  padding: 0 5px;
+}
+
+/* ---- branch tree ---- */
+
+.tree-row.current .label {
+  font-weight: 600;
+}
+
+.tree-row .sync {
+  margin-left: 6px;
+  color: var(--vscode-gitDecoration-modifiedResourceForeground);
+  font-size: 0.9em;
+}
+
+/* ---- details ---- */
+
+.commit-info {
+  flex: none;
+  padding: 8px 10px;
+  line-height: 1.45;
+  user-select: text;
+}
+
+.ci-subject {
+  margin-bottom: 4px;
+  font-weight: 600;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ci-body {
+  margin-bottom: 8px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ci-meta > div {
+  margin-top: 2px;
+}
+
+.ci-hash,
+.ci-parent {
+  font-family: var(--vscode-editor-font-family);
+}
+
+.ci-item {
+  margin-top: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

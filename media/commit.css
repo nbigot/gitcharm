@@ -1,0 +1,217 @@
+.commit-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---- Commit | Stash tabs ---- */
+
+.tabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  height: 28px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--gc-border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--vscode-panelTitle-inactiveForeground, var(--gc-dim));
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--vscode-panelTitle-activeForeground, var(--vscode-foreground));
+}
+
+.tab.active {
+  border-bottom-color: var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
+  color: var(--vscode-panelTitle-activeForeground, var(--vscode-foreground));
+}
+
+.tab-count:not(:empty) {
+  min-width: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  font-size: 0.85em;
+  line-height: 16px;
+  text-align: center;
+}
+
+.tab-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tab-page[hidden] {
+  display: none;
+}
+
+#stashTree {
+  flex: 1;
+  min-height: 0;
+}
+
+#stashTree .tree-row.stash .label {
+  font-weight: 600;
+}
+
+#stashTree .tree-row.note {
+  cursor: default;
+}
+
+.banner {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--vscode-inputValidation-warningBorder, transparent);
+  background: var(--vscode-inputValidation-warningBackground, rgba(229, 160, 58, 0.15));
+}
+
+.banner[hidden] {
+  display: none;
+}
+
+.banner > .codicon {
+  color: var(--vscode-editorWarning-foreground);
+}
+
+.banner .text {
+  flex: 1 1 160px;
+}
+
+.banner-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.banner button {
+  height: 22px;
+  padding: 0 10px;
+}
+
+.commit-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.changes-pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+#changes {
+  flex: 1;
+  min-height: 60px;
+}
+
+#changes .cb {
+  margin-right: 2px;
+}
+
+.message-pane {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  height: min(var(--message-height, 140px), 50vh);
+  min-height: 90px;
+  padding: 6px 8px 8px;
+}
+
+#splitMessageX {
+  display: none;
+}
+
+/* Wide and short, as in the bottom panel: the message goes beside the changes, like PyCharm docked at the bottom. */
+@media (min-width: 560px) and (min-aspect-ratio: 8/5) {
+  .commit-body {
+    flex-direction: row;
+  }
+
+  #splitMessageY {
+    display: none;
+  }
+
+  #splitMessageX {
+    display: block;
+  }
+
+  .message-pane {
+    width: var(--message-width, 45%);
+    max-width: calc(100% - 200px);
+    height: auto;
+    min-height: 0;
+  }
+}
+
+.message-options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.amend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.amend.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#message {
+  flex: 1;
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 2px;
+  outline: none;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  resize: none;
+  user-select: text;
+}
+
+#message:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+#message::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#message:disabled {
+  opacity: 0.5;
+}

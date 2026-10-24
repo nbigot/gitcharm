@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest an improvement or a missing PyCharm-style feature
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: The task or workflow, and what makes it hard today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How should it work?
+      description: If this exists in PyCharm or another JetBrains IDE, say where and how it behaves there.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've tried
