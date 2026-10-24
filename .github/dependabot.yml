@@ -7,6 +7,12 @@ updates:
     commit-message:
       prefix: build
       include: scope
+    ignore:
+      # Must not be newer than engines.vscode: vsce refuses to package otherwise.
+      - dependency-name: "@types/vscode"
+      # Must match the Node.js version inside VS Code's extension host, not the latest Node.js.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       dev-dependencies:
         dependency-type: development
