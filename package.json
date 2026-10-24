@@ -2,7 +2,7 @@
   "name": "gitcharm",
   "displayName": "GitCharm",
   "description": "A PyCharm-style Git experience for VS Code: log with commit graph, branches tree, commit details, a checkbox-based Commit view and a branches popup.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "local",
   "license": "MIT",
   "author": "Nicolas Bigot",
