@@ -1,9 +1,22 @@
 import type { ChangeStatus, Commit, CommitDetails, FileChange, LocalChange, RebaseCommit, Ref, StashEntry } from '../shared/types';
 
-// Field / record separators used in our --format strings. They cannot appear
-// in commit subjects or ref names in practice.
+// Field / record separators used in our --format strings. Ref names cannot
+// contain them, but a commit message can: a crafted message can end a record
+// early and make the rest of it look like another commit. So every parser
+// below drops records whose hashes aren't hashes, and the extension checks
+// the hashes webviews send back with `isCommitHash` before giving them to git.
 export const FS = '\x1f';
 export const RS = '\x1e';
+
+/** A full SHA-1 or SHA-256 object name, as `%H` / `%P` print them. */
+export function isCommitHash(value: unknown): value is string {
+  return typeof value === 'string' && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(value);
+}
+
+function parseParents(parents: string | undefined): string[] | undefined {
+  const list = parents ? parents.split(' ') : [];
+  return list.every(isCommitHash) ? list : undefined;
+}
 
 export const LOG_FORMAT = ['%H', '%P', '%an', '%ae', '%at', '%s'].join('%x1f') + '%x1e';
 
@@ -15,12 +28,13 @@ export function parseLog(stdout: string): Commit[] {
       continue;
     }
     const [hash, parents, author, email, date, subject] = record.split(FS);
-    if (!hash) {
+    const parentList = parseParents(parents);
+    if (!isCommitHash(hash) || !parentList) {
       continue;
     }
     commits.push({
       hash,
-      parents: parents ? parents.split(' ') : [],
+      parents: parentList,
       author,
       email,
       date: Number(date),
@@ -37,10 +51,11 @@ export function parseFullLog(stdout: string): RebaseCommit[] {
   const commits: RebaseCommit[] = [];
   for (const raw of stdout.split(RS)) {
     const [hash, parents, author, email, date, subject, ...message] = raw.replace(/^\n/, '').split(FS);
-    if (hash) {
+    const parentList = parseParents(parents);
+    if (isCommitHash(hash) && parentList) {
       commits.push({
         hash,
-        parents: parents ? parents.split(' ') : [],
+        parents: parentList,
         author,
         email,
         date: Number(date),
@@ -57,9 +72,13 @@ export const DETAILS_FORMAT = ['%H', '%P', '%an', '%ae', '%at', '%cn', '%ce', '%
 export function parseCommitDetails(stdout: string, files: FileChange[]): CommitDetails {
   const [hash, parents, author, authorEmail, authorDate, committer, committerEmail, committerDate, ...rest] =
     stdout.split(FS);
+  const parentList = parseParents(parents);
+  if (!isCommitHash(hash) || !parentList) {
+    throw new Error('Unexpected output from git show.');
+  }
   return {
     hash,
-    parents: parents ? parents.split(' ') : [],
+    parents: parentList,
     author,
     authorEmail,
     authorDate: Number(authorDate),
@@ -230,7 +249,10 @@ export function parseStashList(stdout: string): StashEntry[] {
       continue;
     }
     const [ref, hash, parents, date, subject = ''] = line.split(FS);
-    const parentList = parents ? parents.split(' ') : [];
+    const parentList = parseParents(parents);
+    if (!/^stash@\{\d+\}$/.test(ref) || !isCommitHash(hash) || !parentList) {
+      continue;
+    }
     // "On main: message" when a message was given, "WIP on main: 1a2b3c4 subject" otherwise.
     const m = /^(WIP on|On) ([^:]+): (.*)$/.exec(subject);
     entries.push({

@@ -419,7 +419,7 @@ function rowHtml(i: number): string {
     `<div class="col subject">${graphSvg(graph[i], isHead)}<span class="msg">${esc(c.subject)}</span>${labelsHtml(c.hash)}</div>` +
     `<div class="col author${me ? ' me' : ''}" title="${esc(`${c.author} <${c.email}>`)}">${esc(c.author)}</div>` +
     `<div class="col date">${formatDate(c.date)}</div>` +
-    `<div class="col hash">${c.hash.slice(0, 8)}</div>` +
+    `<div class="col hash">${esc(c.hash.slice(0, 8))}</div>` +
     '</div>'
   );
 }
@@ -1105,7 +1105,7 @@ function renderDetails(loadingDetails = false): void {
           const f = row.data;
           const dir = state.filesAsTree ? '' : f.path.slice(0, -row.name.length - 1);
           return (
-            `<div class="tree-row file s-${f.status}${selectedFile === f.path ? ' selected' : ''}" data-n="${i}" style="--depth:${row.depth}" title="${esc(`${f.path} (${STATUS_NAMES[f.status] ?? f.status})`)}">` +
+            `<div class="tree-row file s-${esc(f.status)}${selectedFile === f.path ? ' selected' : ''}" data-n="${i}" style="--depth:${row.depth}" title="${esc(`${f.path} (${STATUS_NAMES[f.status] ?? f.status})`)}">` +
             `<span class="twisty-space"></span>${icon('file', 'tree-icon')}<span class="label">${esc(row.name)}</span>` +
             (f.oldPath ? `<span class="hint">← ${esc(f.oldPath)}</span>` : '') +
             (dir ? `<span class="hint">${esc(dir)}</span>` : '') +
@@ -1127,7 +1127,7 @@ function renderCommitInfo(): void {
         .map((hash) => {
           const c = commits[indexByHash.get(hash)!];
           return (
-            `<div class="ci-item"><a class="ci-parent" data-hash="${hash}" title="Show only this commit">${hash.slice(0, 8)}</a> ` +
+            `<div class="ci-item"><a class="ci-parent" data-hash="${esc(hash)}" title="Show only this commit">${esc(hash.slice(0, 8))}</a> ` +
             `${esc(c.subject)} <span class="dim">${esc(c.author)}, ${esc(formatDate(c.date))}</span></div>`
           );
         })
@@ -1152,14 +1152,14 @@ function renderCommitInfo(): void {
     `<div class="ci-subject">${esc(subject)}</div>` +
     (body ? `<div class="ci-body">${esc(body)}</div>` : '') +
     '<div class="ci-meta">' +
-    `<div><a class="ci-hash" title="Copy full hash" data-copy="${d.hash}">${d.hash.slice(0, 10)}</a> ` +
+    `<div><a class="ci-hash" title="Copy full hash" data-copy="${esc(d.hash)}">${esc(d.hash.slice(0, 10))}</a> ` +
     `<b>${esc(d.author)}</b> <span class="dim">&lt;${esc(d.authorEmail)}&gt;</span> on ${esc(formatFullDate(d.authorDate))}</div>` +
     (committedSeparately
       ? `<div class="dim">committed by ${esc(d.committer)} on ${esc(formatFullDate(d.committerDate))}</div>`
       : '') +
     (d.parents.length
       ? `<div class="dim">${d.parents.length > 1 ? 'Merge of' : 'Parent'}: ${d.parents
-          .map((p) => `<a class="ci-parent" data-hash="${p}">${p.slice(0, 8)}</a>`)
+          .map((p) => `<a class="ci-parent" data-hash="${esc(p)}">${esc(p.slice(0, 8))}</a>`)
           .join(', ')}${d.parents.length > 1 ? ' — changes shown against the first parent' : ''}</div>`
       : '<div class="dim">Root commit</div>') +
     `<div class="dim">${branches}</div>` +

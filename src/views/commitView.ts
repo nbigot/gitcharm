@@ -2,12 +2,19 @@ import { basename } from 'node:path';
 import * as vscode from 'vscode';
 import { errorText, type GitActions, type ViewHooks } from '../actions';
 import { GitError } from '../git/exec';
+import { isCommitHash } from '../git/parsers';
 import type { Repository } from '../git/repository';
 import type { RepoManager } from '../repoManager';
 import { emptyUri, revisionUri, workingUri } from '../revisionContent';
 import type { ChangeRef, CommitTab, CommitToExtension, CommitToWebview } from '../shared/protocol';
-import type { LocalChange } from '../shared/types';
+import type { LocalChange, StashEntry } from '../shared/types';
 import { renderWebviewHtml, webviewOptions } from './webviewHtml';
+
+function isStash(stash: StashEntry | undefined): boolean {
+  return (
+    !!stash && /^stash@\{\d+\}$/.test(stash.ref) && isCommitHash(stash.hash) && (stash.base === '' || isCommitHash(stash.base))
+  );
+}
 
 /** The current changes matching the rows the user selected (kind + path). */
 function pick(changes: LocalChange[], refs: ChangeRef[]): LocalChange[] {
@@ -175,12 +182,13 @@ export class CommitView implements vscode.WebviewViewProvider, vscode.Disposable
         return this.operation(repo, message.action, message.changes ?? []);
       case 'stash':
         return this.actions.stashChanges(repo, pick(await repo.status(), message.changes), message.onlyThese);
+      // Stash hashes and refs are passed to git as revisions, so they must be exactly that.
       case 'stashFiles':
-        return this.sendStashFiles(repo, message.hash);
+        return isCommitHash(message.hash) ? this.sendStashFiles(repo, message.hash) : undefined;
       case 'stashAction':
-        return this.actions.stashAction(repo, message.action, message.stash);
+        return isStash(message.stash) ? this.actions.stashAction(repo, message.action, message.stash) : undefined;
       case 'stashOpen':
-        return this.actions.openStashFile(repo, message.stash, message.file);
+        return isStash(message.stash) ? this.actions.openStashFile(repo, message.stash, message.file) : undefined;
       case 'clearStashes':
         return this.actions.clearStashes(repo);
     }
