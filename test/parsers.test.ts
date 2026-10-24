@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isCommitHash,
   isUncommitted,
   parseBlame,
   parseCommitDetails,
@@ -14,29 +15,59 @@ import {
 } from '../src/git/parsers';
 import { buildRebaseTodo } from '../src/git/rebase';
 
+/** A full-length fake hash made of one hex digit. */
+const sha = (digit: string) => digit.repeat(40);
+
+describe('isCommitHash', () => {
+  it('accepts full SHA-1 and SHA-256 hashes only', () => {
+    expect(isCommitHash(sha('a'))).toBe(true);
+    expect(isCommitHash('0'.repeat(64))).toBe(true);
+    expect(isCommitHash('abc1234')).toBe(false);
+    expect(isCommitHash(sha('A'))).toBe(false);
+    expect(isCommitHash('--output=/tmp/x')).toBe(false);
+    expect(isCommitHash(`${sha('a')}\nexec rm -rf ~`)).toBe(false);
+    expect(isCommitHash(undefined)).toBe(false);
+  });
+});
+
 describe('parseLog', () => {
   it('parses records separated by the record separator', () => {
     const out =
-      'aaa\x1fbbb ccc\x1fAlice\x1falice@x.io\x1f1700000000\x1fMerge branch\x1e\n' +
-      'bbb\x1f\x1fBob\x1fbob@x.io\x1f1690000000\x1fInitial\x1e\n';
+      `${sha('a')}\x1f${sha('b')} ${sha('c')}\x1fAlice\x1falice@x.io\x1f1700000000\x1fMerge branch\x1e\n` +
+      `${sha('b')}\x1f\x1fBob\x1fbob@x.io\x1f1690000000\x1fInitial\x1e\n`;
     expect(parseLog(out)).toEqual([
-      { hash: 'aaa', parents: ['bbb', 'ccc'], author: 'Alice', email: 'alice@x.io', date: 1700000000, subject: 'Merge branch' },
-      { hash: 'bbb', parents: [], author: 'Bob', email: 'bob@x.io', date: 1690000000, subject: 'Initial' },
+      { hash: sha('a'), parents: [sha('b'), sha('c')], author: 'Alice', email: 'alice@x.io', date: 1700000000, subject: 'Merge branch' },
+      { hash: sha('b'), parents: [], author: 'Bob', email: 'bob@x.io', date: 1690000000, subject: 'Initial' },
     ]);
   });
 
   it('returns nothing for empty output', () => {
     expect(parseLog('')).toEqual([]);
   });
+
+  it('ignores fake commits forged with separators inside a commit message', () => {
+    // The subject ends the record early; the rest would read as a commit whose
+    // "hash" is a git option or HTML.
+    const subject = 'Nice change\x1e--output=/home/u/.bashrc\x1f<b>x</b>\x1fEve\x1fe@x\x1f0\x1fFake';
+    const out =
+      `${sha('a')}\x1f${sha('b')}\x1fAlice\x1falice@x.io\x1f1700000000\x1f${subject}\x1e\n` +
+      `${sha('b')}\x1f\x1fBob\x1fbob@x.io\x1f1690000000\x1fInitial\x1e\n`;
+    expect(parseLog(out).map((c) => c.hash)).toEqual([sha('a'), sha('b')]);
+    expect(parseLog(out)[0].subject).toBe('Nice change');
+  });
 });
 
 describe('parseCommitDetails', () => {
   it('keeps the full multi-line message', () => {
-    const out = 'h\x1fp1\x1fA\x1fa@x\x1f1\x1fC\x1fc@x\x1f2\x1fSubject\n\nBody line\n\n';
+    const out = `${sha('1')}\x1f${sha('2')}\x1fA\x1fa@x\x1f1\x1fC\x1fc@x\x1f2\x1fSubject\n\nBody line\n\n`;
     const d = parseCommitDetails(out, []);
     expect(d.message).toBe('Subject\n\nBody line');
     expect(d.committerDate).toBe(2);
-    expect(d.parents).toEqual(['p1']);
+    expect(d.parents).toEqual([sha('2')]);
+  });
+
+  it('refuses output whose hashes are not hashes', () => {
+    expect(() => parseCommitDetails('--output=x\x1f\x1fA\x1fa@x\x1f1\x1fC\x1fc@x\x1f2\x1fSubject', [])).toThrow();
   });
 });
 
@@ -151,25 +182,33 @@ describe('parseRecentCheckouts', () => {
 
 describe('parseFullLog', () => {
   it('keeps multi-line messages', () => {
-    const out = 'h1\x1fp1\x1fAnn\x1fann@x\x1f100\x1fSubject\x1fSubject\n\nBody line\n\x1e\nh2\x1f\x1fBob\x1fbob@x\x1f50\x1fRoot\x1fRoot\n\x1e\n';
+    const out = `${sha('1')}\x1f${sha('3')}\x1fAnn\x1fann@x\x1f100\x1fSubject\x1fSubject\n\nBody line\n\x1e\n${sha('2')}\x1f\x1fBob\x1fbob@x\x1f50\x1fRoot\x1fRoot\n\x1e\n`;
     expect(parseFullLog(out)).toEqual([
-      { hash: 'h1', parents: ['p1'], author: 'Ann', email: 'ann@x', date: 100, subject: 'Subject', message: 'Subject\n\nBody line' },
-      { hash: 'h2', parents: [], author: 'Bob', email: 'bob@x', date: 50, subject: 'Root', message: 'Root' },
+      { hash: sha('1'), parents: [sha('3')], author: 'Ann', email: 'ann@x', date: 100, subject: 'Subject', message: 'Subject\n\nBody line' },
+      { hash: sha('2'), parents: [], author: 'Bob', email: 'bob@x', date: 50, subject: 'Root', message: 'Root' },
     ]);
+  });
+
+  it('ignores fake commits forged inside a message, so they never reach the rebase todo', () => {
+    const message = 'Subject\n\x1e\nfeed\nexec touch pwned\x1f\x1fEve\x1fe@x\x1f0\x1fFake\x1fFake';
+    const out = `${sha('1')}\x1f\x1fAnn\x1fann@x\x1f100\x1fSubject\x1f${message}\n\x1e\n`;
+    expect(parseFullLog(out).map((c) => c.hash)).toEqual([sha('1')]);
   });
 });
 
 describe('parseStashList', () => {
   it('reads messages, branches and untracked parts', () => {
+    const [s0, s1, s2, b0, b1, b2, i, u] = ['0', '1', '2', 'b', 'c', 'd', 'e', 'f'].map(sha);
     const out = [
-      'stash@{0}\x1fs0\x1fb0 i0\x1f200\x1fOn feature/x: half done: really',
-      'stash@{1}\x1fs1\x1fb1 i1 u1\x1f100\x1fWIP on main: 1a2b3c4 Fix parser',
-      'stash@{2}\x1fs2\x1fb2 i2\x1f50\x1fOn (no branch): detached work',
+      `stash@{0}\x1f${s0}\x1f${b0} ${i}\x1f200\x1fOn feature/x: half done: really`,
+      `stash@{1}\x1f${s1}\x1f${b1} ${i} ${u}\x1f100\x1fWIP on main: 1a2b3c4 Fix parser`,
+      `stash@{2}\x1f${s2}\x1f${b2} ${i}\x1f50\x1fOn (no branch): detached work`,
+      'stash@{3}\x1fnot-a-hash\x1f\x1f10\x1fOn main: forged',
     ].join('\n');
     expect(parseStashList(out)).toEqual([
-      { ref: 'stash@{0}', hash: 's0', base: 'b0', hasUntracked: false, date: 200, message: 'half done: really', branch: 'feature/x' },
-      { ref: 'stash@{1}', hash: 's1', base: 'b1', hasUntracked: true, date: 100, message: 'WIP on main: 1a2b3c4 Fix parser', branch: 'main' },
-      { ref: 'stash@{2}', hash: 's2', base: 'b2', hasUntracked: false, date: 50, message: 'detached work', branch: undefined },
+      { ref: 'stash@{0}', hash: s0, base: b0, hasUntracked: false, date: 200, message: 'half done: really', branch: 'feature/x' },
+      { ref: 'stash@{1}', hash: s1, base: b1, hasUntracked: true, date: 100, message: 'WIP on main: 1a2b3c4 Fix parser', branch: 'main' },
+      { ref: 'stash@{2}', hash: s2, base: b2, hasUntracked: false, date: 50, message: 'detached work', branch: undefined },
     ]);
   });
 });
@@ -216,26 +255,33 @@ describe('buildRebaseTodo', () => {
     return { todo: todo.split('\n'), messages };
   };
 
+  const [a, b, c, d, e, f, g] = ['a', 'b', 'c', 'd', 'e', 'f', '9'].map(sha);
+
   it('uses git reword, and gives the new message to the end of a squash group', () => {
     const { todo, messages } = build([
-      { hash: 'a', action: 'reword', message: 'New message' },
-      { hash: 'b', action: 'drop' },
-      { hash: 'c', action: 'squash' },
-      { hash: 'd', action: 'fixup' },
-      { hash: 'e', action: 'edit' },
-      { hash: 'f', action: 'reword', message: 'Only fixups below' },
-      { hash: 'g', action: 'fixup' },
+      { hash: a, action: 'reword', message: 'New message' },
+      { hash: b, action: 'drop' },
+      { hash: c, action: 'squash' },
+      { hash: d, action: 'fixup' },
+      { hash: e, action: 'edit' },
+      { hash: f, action: 'reword', message: 'Only fixups below' },
+      { hash: g, action: 'fixup' },
     ]);
-    expect(todo).toEqual(['reword a', 'drop b', 'squash c', 'fixup d', 'edit e', 'reword f', 'fixup g', '']);
+    expect(todo).toEqual([`reword ${a}`, `drop ${b}`, `squash ${c}`, `fixup ${d}`, `edit ${e}`, `reword ${f}`, `fixup ${g}`, '']);
     // git asks for the combined message at `d` (the group has a squash), not at `g` (fixups only).
-    expect(messages).toEqual({ a: 'New message\n', d: 'New message\n', f: 'Only fixups below\n' });
+    expect(messages).toEqual({ [a]: 'New message\n', [d]: 'New message\n', [f]: 'Only fixups below\n' });
   });
 
   it('keeps a reword without a new message as a plain pick', () => {
-    expect(build([{ hash: 'a', action: 'reword', message: '  ' }])).toEqual({ todo: ['pick a', ''], messages: {} });
+    expect(build([{ hash: a, action: 'reword', message: '  ' }])).toEqual({ todo: [`pick ${a}`, ''], messages: {} });
   });
 
   it('refuses to squash the first commit', () => {
-    expect(() => build([{ hash: 'a', action: 'drop' }, { hash: 'b', action: 'fixup' }])).toThrow(/first commit/);
+    expect(() => build([{ hash: a, action: 'drop' }, { hash: b, action: 'fixup' }])).toThrow(/first commit/);
+  });
+
+  it('refuses entries that could add todo lines of their own', () => {
+    expect(() => build([{ hash: `${a}\nexec touch pwned`, action: 'pick' }])).toThrow(/invalid commit/);
+    expect(() => build([{ hash: a, action: 'exec touch pwned' as 'pick' }])).toThrow(/invalid commit/);
   });
 });

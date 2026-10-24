@@ -1,4 +1,7 @@
 import type { RebaseEntry } from '../shared/types';
+import { isCommitHash } from './parsers';
+
+const ACTIONS = new Set<string>(['pick', 'edit', 'reword', 'squash', 'fixup', 'drop']);
 
 /** Quotes a path for the POSIX shell git runs editors with. */
 export function shellQuote(path: string): string {
@@ -26,6 +29,11 @@ export function buildRebaseTodo(entries: RebaseEntry[], writeMessage: (hash: str
     group = { squashes: false };
   };
   for (const entry of entries) {
+    // Each entry becomes a todo line: anything but a known action and a full
+    // hash could add lines of its own, such as `exec`.
+    if (!ACTIONS.has(entry.action) || !isCommitHash(entry.hash)) {
+      throw new Error('The rebase plan contains an invalid commit.');
+    }
     switch (entry.action) {
       case 'drop':
         // Dropped rows don't end a squash group: the next squash joins the commit above.

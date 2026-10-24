@@ -653,3 +653,16 @@ describe('Repository.blame', () => {
     expect(old.lines).toEqual([first]);
   });
 });
+
+describe('Untrusted repository content', () => {
+  it('shows no fake commits for separators forged in a commit message', async () => {
+    write('msg.txt', 'Nice change\x1e--output=pwned.txt\x1f\x1fEve\x1fe@x\x1f0\x1fFake\n');
+    git('commit', '-q', '--allow-empty', '-F', 'msg.txt');
+    const real = git('log', '--format=%H').split('\n');
+
+    const { commits } = await repo.log({}, 100);
+    expect(commits.map((c) => c.hash)).toEqual(real);
+    expect(commits[0].subject).toBe('Nice change');
+    expect(existsSync(join(dir, 'pwned.txt'))).toBe(false);
+  });
+});

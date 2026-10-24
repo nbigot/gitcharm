@@ -117,12 +117,12 @@ function render(): void {
     .map((row, i) => {
       const joined = row.action === 'squash' || row.action === 'fixup';
       return (
-        `<div class="rb-row a-${row.action}${selected.has(i) ? ' selected' : ''}" data-i="${i}">` +
+        `<div class="rb-row a-${esc(row.action)}${selected.has(i) ? ' selected' : ''}" data-i="${i}">` +
         `<span class="grip" title="Drag to reorder">${icon('gripper')}</span>` +
         `<select class="c-action" data-i="${i}" title="${esc(ACTIONS.find((a) => a.id === row.action)!.hint)}">` +
         ACTIONS.map((a) => `<option value="${a.id}"${a.id === row.action ? ' selected' : ''}>${a.label}</option>`).join('') +
         '</select>' +
-        `<span class="c-hash">${row.commit.hash.slice(0, 8)}</span>` +
+        `<span class="c-hash">${esc(row.commit.hash.slice(0, 8))}</span>` +
         `<span class="c-subject">${joined ? icon('arrow-small-up', 'joined') : ''}<span class="text" title="${esc(row.commit.message)}">${esc(subject(row))}</span></span>` +
         `<span class="c-author">${esc(row.commit.author)}</span>` +
         `<span class="c-date">${formatDate(row.commit.date)}</span>` +

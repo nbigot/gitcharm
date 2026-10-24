@@ -1,10 +1,27 @@
 import * as vscode from 'vscode';
 import { errorText, type GitActions } from '../actions';
+import { isCommitHash } from '../git/parsers';
 import type { Repository } from '../git/repository';
 import type { RepoManager } from '../repoManager';
 import type { LogToExtension, LogToWebview } from '../shared/protocol';
 import type { HeadInfo, LogFilter, Ref } from '../shared/types';
 import { renderWebviewHtml, webviewOptions } from './webviewHtml';
+
+/** Hashes from the webview are passed to git as revisions, so they must be hashes, never options. */
+function hashesAreValid(message: LogToExtension): boolean {
+  switch (message.type) {
+    case 'select':
+    case 'commitAction':
+      return isCommitHash(message.hash);
+    case 'open':
+      return isCommitHash(message.hash) && (message.range?.base === undefined || isCommitHash(message.range.base));
+    case 'selectMany':
+    case 'commitsAction':
+      return Array.isArray(message.hashes) && message.hashes.every(isCommitHash);
+    default:
+      return true;
+  }
+}
 
 function signature(root: string, head: HeadInfo, refs: Ref[]): string {
   return JSON.stringify([root, head, refs.map((r) => [r.fullName, r.hash, r.ahead, r.behind, r.upstream])]);
@@ -136,6 +153,9 @@ export class LogView implements vscode.WebviewViewProvider, vscode.Disposable {
       if (message.type === 'load') {
         this.post({ type: 'log', requestId: message.requestId, commits: [], refs: [], head: {}, hasMore: false });
       }
+      return;
+    }
+    if (!hashesAreValid(message)) {
       return;
     }
     switch (message.type) {

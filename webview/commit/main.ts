@@ -307,7 +307,7 @@ function render(): void {
         const c = row.change;
         const dir = state.groupByDir ? '' : dirname(c.path);
         return (
-          `<div class="tree-row file k-${c.kind}${selected}" data-n="${i}" style="--depth:${row.depth}" title="${esc(`${c.path} (${KIND_LABEL[c.kind]})`)}">` +
+          `<div class="tree-row file k-${esc(c.kind)}${selected}" data-n="${i}" style="--depth:${row.depth}" title="${esc(`${c.path} (${KIND_LABEL[c.kind]})`)}">` +
           '<span class="twisty-space"></span>' +
           checkbox(isIncluded(c) ? 'on' : 'off') +
           `${icon('file', 'tree-icon')}<span class="label">${esc(basename(c.path))}</span>` +
@@ -673,7 +673,7 @@ function renderStashes(): void {
         );
       }
       const f = row.file;
-      const kind = f.untracked ? 'k-unversioned' : `s-${f.status}`;
+      const kind = f.untracked ? 'k-unversioned' : `s-${esc(f.status)}`;
       return (
         `<div class="tree-row file ${kind}${selected}" data-n="${i}" style="--depth:1" title="${esc(f.path + (f.untracked ? ' (unversioned)' : ''))}">` +
         `<span class="twisty-space"></span>${icon('file', 'tree-icon')}<span class="label">${esc(basename(f.path))}</span>` +
